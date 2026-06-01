@@ -30,7 +30,25 @@ const config = {
     scope: "@daihaus",
     repository: "git+https://github.com/daihaus/webfonts.git",
   },
-  generator: { tool: "cn-font-split", version: "7.4.2", core: "7.6.8" },
+  generator: {
+    tool: "cn-font-split",
+    version: "7.4.2",
+    core: "7.6.8",
+    // SHA-256 of each cn-font-split core 7.6.8 release binary, verified after download (dlopen'd into
+    // the build, so this is the trust boundary). Regenerate with `shasum -a 256` when bumping `core`.
+    coreChecksums: {
+      "aarch64-apple-darwin.dylib":
+        "3a29a76a5f50e2ecffffd7f404e4c4cad80ab56213982f68609064de1fe3b514",
+      "x86_64-apple-darwin.dylib":
+        "2bd3651db28792c1775a793817f0a55c02a4c255157aa4535e4d6149350b8df4",
+      "x86_64-unknown-linux-gnu.so":
+        "db4690e3b9c4b04f6dfa5965792585c389914038f6a4c90fbe73baaf16bbf19c",
+      "aarch64-unknown-linux-gnu.so":
+        "af74ce9689ed0a079a389dd7bff95939d565731a0a2dc3b5136d813b8ff2607c",
+      "x86_64-pc-windows-msvc.dll":
+        "31784b363f59476abe2034b708a3566f41a9fab80370d18a3613b52b060cdc17",
+    },
+  },
   families: [
     {
       slug: "lxgw-bright",

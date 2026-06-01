@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdir, rename, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -35,7 +36,10 @@ async function exists(p: string): Promise<boolean> {
  * suitable for `process.env.CN_FONT_SPLIT_BIN`. Keeping the binary here (rather than relying on the
  * package's own install step) makes the build self-contained and reproducible.
  */
-export async function ensureCoreBinary(coreVersion: string): Promise<string> {
+export async function ensureCoreBinary(
+  coreVersion: string,
+  checksums: Record<string, string> = {},
+): Promise<string> {
   const target = rustTarget();
   const name = `libffi-${target}.${binExt(target)}`;
   const dir = join(repoRoot, ".cache", "cn-font-split", coreVersion);
@@ -67,6 +71,18 @@ export async function ensureCoreBinary(coreVersion: string): Promise<string> {
       `Downloaded core is implausibly small (${String(bytes.byteLength)} bytes): ${url.href}`,
     );
   }
+  // Integrity check: the core binary is dlopen'd into the build, so a tampered-but-plausible binary
+  // from a compromised release host must be caught. Verify against the pinned SHA-256 when present.
+  const expected = checksums[`${target}.${binExt(target)}`];
+  if (expected) {
+    const actual = createHash("sha256").update(bytes).digest("hex");
+    if (actual !== expected) {
+      throw new Error(
+        `Core binary checksum mismatch for ${name}: expected ${expected}, got ${actual}`,
+      );
+    }
+  }
+
   // Write atomically so an interrupted download never leaves a half-written binary in the cache.
   const tmp = `${dest}.download`;
   await writeFile(tmp, bytes);

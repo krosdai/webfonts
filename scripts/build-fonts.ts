@@ -23,12 +23,15 @@ function parseCli(argv: string[]): Cli {
   const families: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
+    if (arg === "--") continue; // npm/pnpm forward this script-args separator through verbatim
     if (arg === "--family") {
       const value = argv[++i];
       if (!value) throw new Error("--family requires a slug");
       families.push(value);
     } else if (arg === "--source-root") {
-      cli.sourceRoot = argv[++i];
+      const value = argv[++i];
+      if (!value) throw new Error("--source-root requires a path");
+      cli.sourceRoot = value;
     } else if (arg === "--clean") {
       cli.clean = true;
     } else if (arg === "--catalog-only") {
@@ -61,7 +64,10 @@ async function main(): Promise<void> {
   if (!families.length) throw new Error(`No families matched ${JSON.stringify(cli.families)}`);
 
   // Resolve the native core once and point the package at it before the first split.
-  process.env.CN_FONT_SPLIT_BIN = await ensureCoreBinary(manifest.generator.core);
+  process.env.CN_FONT_SPLIT_BIN = await ensureCoreBinary(
+    manifest.generator.core,
+    manifest.generator.coreChecksums,
+  );
 
   for (const family of families) {
     const familyDir = join(outRoot, family.slug);

@@ -13,7 +13,7 @@
     "build:fonts": "tsx scripts/build-fonts.ts",
     "verify:fonts": "tsx scripts/verify-fonts.ts",
     "catalog": "tsx scripts/build-fonts.ts --catalog-only",
-    "release": "pnpm build:fonts --clean && pnpm verify:fonts && pnpm -r publish --access public --no-git-checks"
+    "release": "pnpm build:fonts -- --clean && pnpm verify:fonts && pnpm -r publish --access public --no-git-checks"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -25,6 +25,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.6",
     "prettier": "^3.8.3",
+    "tar": "^7.5.15",
     "tsx": "^4.22.4",
     "typescript-eslint": "^8.60.0",
     "zod": "^4.4.3"

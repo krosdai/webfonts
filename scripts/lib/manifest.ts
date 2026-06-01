@@ -22,7 +22,12 @@ export const FamilySchema = z.object({
   /** Extra npm keywords merged with the defaults. */
   keywords: z.array(z.string()).default([]),
   /** npm package version — independent SemVer. Bump on any change to the (font source + pipeline) tuple. */
-  version: z.string(),
+  version: z
+    .string()
+    .regex(
+      /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/,
+      "version must be SemVer (x.y.z)",
+    ),
   license: z.object({
     id: z.string(),
     reservedFontName: z.boolean().default(false),
@@ -60,6 +65,8 @@ export const ManifestSchema = z.object({
     version: z.string(),
     /** Rust core (binary) release version. */
     core: z.string(),
+    /** SHA-256 (hex) of each core binary `libffi-<target>.<ext>`, verified after download. */
+    coreChecksums: z.record(z.string(), z.string()).default({}),
   }),
   families: z.array(FamilySchema).min(1),
 });

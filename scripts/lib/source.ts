@@ -1,39 +1,19 @@
-import { execFile } from "node:child_process";
-import { createWriteStream } from "node:fs";
-import { mkdir, open, rename, rm, stat } from "node:fs/promises";
+import { mkdir, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { promisify } from "node:util";
+import { createGunzip } from "node:zlib";
+
+import { extract } from "tar";
 
 import type { Family } from "./manifest.ts";
 import { expandTilde, repoRoot } from "./util.ts";
-
-const exec = promisify(execFile);
 
 async function isDir(p: string): Promise<boolean> {
   try {
     return (await stat(p)).isDirectory();
   } catch {
     return false;
-  }
-}
-
-/** Run `tar`, translating a missing binary into a clear, actionable error. */
-async function runTar(
-  args: string[],
-  slug: string,
-): Promise<{ stdout: string; stderr: string }> {
-  try {
-    return await exec("tar", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new Error(
-        `${slug}: 'tar' was not found on PATH — install tar, or use sourceMode "local" / --source-root`,
-        { cause: err },
-      );
-    }
-    throw err;
   }
 }
 
@@ -87,40 +67,27 @@ async function downloadRelease(
     throw new Error(`${slug}: download failed (HTTP ${String(res.status)}): ${url.href}`);
   if (!res.body) throw new Error(`${slug}: empty response body: ${url.href}`);
 
-  // Stage the download + extraction outside `dest`, then rename() so an interrupted run never leaves
-  // a partial directory that the next run would treat as a valid cache hit.
-  const tarball = `${dest}.tar.gz.tmp`;
+  // Extract into a sibling staging dir, then rename() — an interrupted run never leaves a partial dir
+  // that the next run would treat as a valid cache hit. node-tar streams the archive (no full-tarball
+  // buffer), strips the top-level dir, refuses `..`/absolute members, and the filter drops symlinks /
+  // hardlinks / devices, so a compromised upstream archive can't escape `staging`.
   const staging = `${dest}.staging`;
   await rm(staging, { recursive: true, force: true });
   await mkdir(staging, { recursive: true });
-
-  // Stream the download straight to disk — never buffer a multi-hundred-MB tarball in memory.
-  await pipeline(Readable.fromWeb(res.body), createWriteStream(tarball));
-
-  // Validate the archive header on disk: a real GitHub tarball starts with the gzip magic (1f 8b).
-  const fh = await open(tarball, "r");
   try {
-    const head = Buffer.alloc(2);
-    await fh.read(head, 0, 2, 0);
-    if (head[0] !== 0x1f || head[1] !== 0x8b) {
-      throw new Error(`${slug}: source is not a gzip tarball: ${url.href}`);
-    }
-  } finally {
-    await fh.close();
+    await pipeline(
+      Readable.fromWeb(res.body),
+      createGunzip(),
+      extract({
+        cwd: staging,
+        strip: 1,
+        filter: (_path, entry) => entry.type === "File" || entry.type === "Directory",
+      }),
+    );
+  } catch (err) {
+    await rm(staging, { recursive: true, force: true });
+    throw new Error(`${slug}: failed to extract source archive: ${url.href}`, { cause: err });
   }
-
-  // Defense-in-depth: reject path-traversal / absolute members before extracting. BSD/busybox/older
-  // GNU tar don't refuse `..` entries, and the threat model here is a compromised upstream archive.
-  const listing = await runTar(["tzf", tarball], slug);
-  for (const entry of listing.stdout.split("\n")) {
-    const name = entry.trim();
-    if (name && (name.startsWith("/") || name.split("/").includes(".."))) {
-      throw new Error(`${slug}: refusing tarball with unsafe path member: ${name}`);
-    }
-  }
-  // GitHub archive tarballs wrap everything in a top-level dir; strip it.
-  await runTar(["xzf", tarball, "-C", staging, "--strip-components=1"], slug);
-  await rm(tarball, { force: true });
   await rename(staging, dest);
   return dest;
 }
