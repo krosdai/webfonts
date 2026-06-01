@@ -1,6 +1,9 @@
 import { execFile } from "node:child_process";
-import { mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import { createWriteStream } from "node:fs";
+import { mkdir, open, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
 
 import type { Family } from "./manifest.ts";
@@ -13,6 +16,24 @@ async function isDir(p: string): Promise<boolean> {
     return (await stat(p)).isDirectory();
   } catch {
     return false;
+  }
+}
+
+/** Run `tar`, translating a missing binary into a clear, actionable error. */
+async function runTar(
+  args: string[],
+  slug: string,
+): Promise<{ stdout: string; stderr: string }> {
+  try {
+    return await exec("tar", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error(
+        `${slug}: 'tar' was not found on PATH — install tar, or use sourceMode "local" / --source-root`,
+        { cause: err },
+      );
+    }
+    throw err;
   }
 }
 
@@ -64,11 +85,7 @@ async function downloadRelease(
   const res = await fetch(url);
   if (!res.ok)
     throw new Error(`${slug}: download failed (HTTP ${String(res.status)}): ${url.href}`);
-  // Validate before persisting: a real GitHub archive starts with the gzip magic (1f 8b).
-  const bytes = new Uint8Array(await res.arrayBuffer());
-  if (bytes.byteLength < 2 || bytes[0] !== 0x1f || bytes[1] !== 0x8b) {
-    throw new Error(`${slug}: source is not a gzip tarball: ${url.href}`);
-  }
+  if (!res.body) throw new Error(`${slug}: empty response body: ${url.href}`);
 
   // Stage the download + extraction outside `dest`, then rename() so an interrupted run never leaves
   // a partial directory that the next run would treat as a valid cache hit.
@@ -76,13 +93,25 @@ async function downloadRelease(
   const staging = `${dest}.staging`;
   await rm(staging, { recursive: true, force: true });
   await mkdir(staging, { recursive: true });
-  await writeFile(tarball, bytes);
+
+  // Stream the download straight to disk — never buffer a multi-hundred-MB tarball in memory.
+  await pipeline(Readable.fromWeb(res.body), createWriteStream(tarball));
+
+  // Validate the archive header on disk: a real GitHub tarball starts with the gzip magic (1f 8b).
+  const fh = await open(tarball, "r");
+  try {
+    const head = Buffer.alloc(2);
+    await fh.read(head, 0, 2, 0);
+    if (head[0] !== 0x1f || head[1] !== 0x8b) {
+      throw new Error(`${slug}: source is not a gzip tarball: ${url.href}`);
+    }
+  } finally {
+    await fh.close();
+  }
+
   // Defense-in-depth: reject path-traversal / absolute members before extracting. BSD/busybox/older
   // GNU tar don't refuse `..` entries, and the threat model here is a compromised upstream archive.
-  const listing = await exec("tar", ["tzf", tarball], {
-    encoding: "utf8",
-    maxBuffer: 64 * 1024 * 1024,
-  });
+  const listing = await runTar(["tzf", tarball], slug);
   for (const entry of listing.stdout.split("\n")) {
     const name = entry.trim();
     if (name && (name.startsWith("/") || name.split("/").includes(".."))) {
@@ -90,7 +119,7 @@ async function downloadRelease(
     }
   }
   // GitHub archive tarballs wrap everything in a top-level dir; strip it.
-  await exec("tar", ["xzf", tarball, "-C", staging, "--strip-components=1"]);
+  await runTar(["xzf", tarball, "-C", staging, "--strip-components=1"], slug);
   await rm(tarball, { force: true });
   await rename(staging, dest);
   return dest;

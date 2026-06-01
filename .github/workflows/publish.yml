@@ -29,8 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Trusted publishing + provenance need npm >= 11.5.1.
-      - run: npm install -g npm@latest
+      # Trusted publishing + provenance need npm >= 11.5.1. Pinned for deterministic runs — bump deliberately.
+      - run: npm install -g npm@11.5.1
       - run: pnpm install --frozen-lockfile
 
       - name: Plan — which packages need publishing
