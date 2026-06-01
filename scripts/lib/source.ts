@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, rename, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
@@ -45,12 +45,22 @@ export async function resolveSourceRoot(family: Family, override?: string): Prom
 
   await mkdir(dest, { recursive: true });
   const tarball = join(cacheDir, `${family.slug}-${version}.tar.gz`);
-  const res = await fetch(releaseUrl);
+  const url = new URL(releaseUrl);
+  if (url.protocol !== "https:")
+    throw new Error(`${family.slug}: refusing non-https source download: ${url.href}`);
+  const res = await fetch(url);
   if (!res.ok)
     throw new Error(
-      `${family.slug}: download failed (HTTP ${String(res.status)}): ${releaseUrl}`,
+      `${family.slug}: download failed (HTTP ${String(res.status)}): ${url.href}`,
     );
-  await writeFile(tarball, new Uint8Array(await res.arrayBuffer()));
+  // Validate before persisting: a real GitHub archive starts with the gzip magic (1f 8b).
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  if (bytes.byteLength < 2 || bytes[0] !== 0x1f || bytes[1] !== 0x8b) {
+    throw new Error(`${family.slug}: source is not a gzip tarball: ${url.href}`);
+  }
+  const tmp = `${tarball}.download`;
+  await writeFile(tmp, bytes);
+  await rename(tmp, tarball);
   // GitHub archive tarballs wrap everything in a top-level dir; strip it.
   await exec("tar", ["xzf", tarball, "-C", dest, "--strip-components=1"]);
   return dest;

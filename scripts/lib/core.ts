@@ -1,4 +1,4 @@
-import { mkdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, rename, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { repoRoot } from "./util.ts";
@@ -44,13 +44,32 @@ export async function ensureCoreBinary(coreVersion: string): Promise<string> {
 
   await mkdir(dir, { recursive: true });
   const host = process.env.CN_FONT_SPLIT_GH_HOST ?? "https://github.com";
-  const url = `${host}/KonghaYao/cn-font-split/releases/download/${coreVersion}/${name}`;
+  const url = new URL(
+    `${host}/KonghaYao/cn-font-split/releases/download/${coreVersion}/${name}`,
+  );
+  if (url.protocol !== "https:")
+    throw new Error(`Refusing non-https core download: ${url.href}`);
+
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(
-      `Failed to download cn-font-split core ${coreVersion} (HTTP ${String(res.status)}): ${url}`,
+      `Failed to download cn-font-split core ${coreVersion} (HTTP ${String(res.status)}): ${url.href}`,
     );
   }
-  await writeFile(dest, new Uint8Array(await res.arrayBuffer()));
+  // Validate the response before persisting it: reject HTML error pages and implausibly small
+  // bodies (the core binary is several MB). This guards the network-data-to-file write below.
+  if ((res.headers.get("content-type") ?? "").includes("text/html")) {
+    throw new Error(`Unexpected HTML response for core download: ${url.href}`);
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  if (bytes.byteLength < 100_000) {
+    throw new Error(
+      `Downloaded core is implausibly small (${String(bytes.byteLength)} bytes): ${url.href}`,
+    );
+  }
+  // Write atomically so an interrupted download never leaves a half-written binary in the cache.
+  const tmp = `${dest}.download`;
+  await writeFile(tmp, bytes);
+  await rename(tmp, dest);
   return dest;
 }
