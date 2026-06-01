@@ -77,6 +77,18 @@ async function downloadRelease(
   await rm(staging, { recursive: true, force: true });
   await mkdir(staging, { recursive: true });
   await writeFile(tarball, bytes);
+  // Defense-in-depth: reject path-traversal / absolute members before extracting. BSD/busybox/older
+  // GNU tar don't refuse `..` entries, and the threat model here is a compromised upstream archive.
+  const listing = await exec("tar", ["tzf", tarball], {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  for (const entry of listing.stdout.split("\n")) {
+    const name = entry.trim();
+    if (name && (name.startsWith("/") || name.split("/").includes(".."))) {
+      throw new Error(`${slug}: refusing tarball with unsafe path member: ${name}`);
+    }
+  }
   // GitHub archive tarballs wrap everything in a top-level dir; strip it.
   await exec("tar", ["xzf", tarball, "-C", staging, "--strip-components=1"]);
   await rm(tarball, { force: true });

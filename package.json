@@ -6,14 +6,14 @@
   },
   "scripts": {
     "format": "prettier --write --ignore-unknown --log-level=warn . && autocorrect --fix .",
-    "lint": "eslint . --no-error-on-unmatched-pattern && pnpm run --filter '*' lint && prettier --check --ignore-unknown .",
+    "lint": "eslint . --no-error-on-unmatched-pattern && pnpm run --filter '*' --if-present lint && prettier --check --ignore-unknown .",
     "lint:staged": "lint-staged",
-    "lint:fix": "eslint . --no-error-on-unmatched-pattern --fix && pnpm run --filter '*' lint:fix && pnpm run format",
+    "lint:fix": "eslint . --no-error-on-unmatched-pattern --fix && pnpm run --filter '*' --if-present lint:fix && pnpm run format",
     "prepare": "husky",
     "build:fonts": "tsx scripts/build-fonts.ts",
     "verify:fonts": "tsx scripts/verify-fonts.ts",
     "catalog": "tsx scripts/build-fonts.ts --catalog-only",
-    "release": "pnpm build:fonts && pnpm verify:fonts && pnpm -r publish --access public --no-git-checks"
+    "release": "pnpm build:fonts --clean && pnpm verify:fonts && pnpm -r publish --access public --no-git-checks"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

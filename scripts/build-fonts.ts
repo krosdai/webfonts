@@ -65,12 +65,14 @@ async function main(): Promise<void> {
 
   for (const family of families) {
     const familyDir = join(outRoot, family.slug);
+    // --clean wipes the whole package dir first, so stale/renamed cuts and their content-hashed
+    // woff2 don't linger and get re-published via the `files` allowlist.
+    if (cli.clean) await rm(familyDir, { recursive: true, force: true });
     const sourceRoot = await resolveSourceRoot(family, cli.sourceRoot);
 
     for (const instance of family.instances) {
       const dir = dirName(instance);
       const outDir = join(familyDir, dir);
-      if (cli.clean) await rm(outDir, { recursive: true, force: true });
       await mkdir(outDir, { recursive: true });
       const started = Date.now();
       await splitInstance({ family, instance, sourceRoot, outDir });
@@ -92,7 +94,13 @@ async function main(): Promise<void> {
   console.log("✓ README catalog updated");
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exitCode = 1;
-});
+main()
+  .then(() => {
+    // cn-font-split's native FFI can SIGABRT during process teardown even after a clean build, which
+    // would make a successful run report failure (and break `release`'s && chain). Exit explicitly.
+    process.exit(0);
+  })
+  .catch((err: unknown) => {
+    console.error(err);
+    process.exit(1);
+  });
