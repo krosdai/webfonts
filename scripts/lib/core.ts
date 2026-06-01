@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { repoRoot } from "./util.ts";
@@ -81,6 +81,10 @@ export async function ensureCoreBinary(
       `Failed to download cn-font-split core ${coreVersion} (HTTP ${String(res.status)}): ${url.href}`,
     );
   }
+  // fetch() follows redirects; reject an https→http downgrade on the final URL.
+  if (new URL(res.url).protocol !== "https:") {
+    throw new Error(`Core download redirected to non-https: ${res.url}`);
+  }
   // Validate the response before persisting it: reject HTML error pages and implausibly small
   // bodies (the core binary is several MB). This guards the network-data-to-file write below.
   if ((res.headers.get("content-type") ?? "").includes("text/html")) {
@@ -104,8 +108,11 @@ export async function ensureCoreBinary(
   }
 
   // Write atomically so an interrupted download never leaves a half-written binary in the cache.
+  // rm the destination first: on a self-heal re-download `dest` exists, and rename-over-existing
+  // fails on Windows. (`force` makes it a no-op on the normal fresh-download path.)
   const tmp = `${dest}.download`;
   await writeFile(tmp, bytes);
+  await rm(dest, { force: true });
   await rename(tmp, dest);
   return dest;
 }

@@ -66,6 +66,10 @@ async function downloadRelease(
   if (!res.ok)
     throw new Error(`${slug}: download failed (HTTP ${String(res.status)}): ${url.href}`);
   if (!res.body) throw new Error(`${slug}: empty response body: ${url.href}`);
+  // fetch() follows redirects; reject an https→http downgrade on the final URL.
+  if (new URL(res.url).protocol !== "https:") {
+    throw new Error(`${slug}: source download redirected to non-https: ${res.url}`);
+  }
 
   // Extract into a sibling staging dir, then rename() — an interrupted run never leaves a partial dir
   // that the next run would treat as a valid cache hit. node-tar streams the archive (no full-tarball
