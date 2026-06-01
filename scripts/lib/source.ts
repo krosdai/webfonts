@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdir, rename, stat, writeFile } from "node:fs/promises";
+import { mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
@@ -19,8 +19,9 @@ async function isDir(p: string): Promise<boolean> {
 /**
  * Resolve the directory that holds a family's source font files.
  *
- * - `sourceMode: 'local'` reads the configured local clone (default).
- * - `sourceMode: 'release'` downloads the upstream tarball into `.cache/` and extracts it.
+ * - `auto` (default): use the local clone if present, else download the release tarball.
+ * - `local`: require the configured local clone.
+ * - `release`: always download + extract the upstream tarball into `.cache/`.
  *
  * `override` (from `--source-root`) wins over the manifest when set.
  */
@@ -29,39 +30,56 @@ export async function resolveSourceRoot(family: Family, override?: string): Prom
 
   const { sourceMode, localPath, releaseUrl, version } = family.upstream;
 
-  if (sourceMode === "local") {
-    if (!localPath)
-      throw new Error(`${family.slug}: sourceMode "local" requires upstream.localPath`);
+  if (sourceMode !== "release" && localPath) {
     const root = expandTilde(localPath);
-    if (!(await isDir(root))) throw new Error(`${family.slug}: localPath not found: ${root}`);
-    return root;
+    if (await isDir(root)) return root;
+    if (sourceMode === "local") throw new Error(`${family.slug}: localPath not found: ${root}`);
+  } else if (sourceMode === "local") {
+    throw new Error(`${family.slug}: sourceMode "local" requires upstream.localPath`);
   }
 
+  // auto (local clone absent) or release
   if (!releaseUrl)
-    throw new Error(`${family.slug}: sourceMode "release" requires upstream.releaseUrl`);
+    throw new Error(`${family.slug}: no usable local clone and no upstream.releaseUrl`);
+  return downloadRelease(family.slug, version, releaseUrl);
+}
+
+/** Download + extract the upstream tarball, committing to the cache dir atomically via rename(). */
+async function downloadRelease(
+  slug: string,
+  version: string,
+  releaseUrl: string,
+): Promise<string> {
   const cacheDir = join(repoRoot, ".cache", "sources");
-  const dest = join(cacheDir, `${family.slug}-${version}`);
+  const dest = join(cacheDir, `${slug}-${version}`);
+  // `dest` only ever exists as the result of a completed rename() below, so a hit is always whole.
   if (await isDir(dest)) return dest;
 
-  await mkdir(dest, { recursive: true });
-  const tarball = join(cacheDir, `${family.slug}-${version}.tar.gz`);
   const url = new URL(releaseUrl);
-  if (url.protocol !== "https:")
-    throw new Error(`${family.slug}: refusing non-https source download: ${url.href}`);
+  if (url.protocol !== "https:") {
+    throw new Error(`${slug}: refusing non-https source download: ${url.href}`);
+  }
+
+  await mkdir(cacheDir, { recursive: true });
   const res = await fetch(url);
   if (!res.ok)
-    throw new Error(
-      `${family.slug}: download failed (HTTP ${String(res.status)}): ${url.href}`,
-    );
+    throw new Error(`${slug}: download failed (HTTP ${String(res.status)}): ${url.href}`);
   // Validate before persisting: a real GitHub archive starts with the gzip magic (1f 8b).
   const bytes = new Uint8Array(await res.arrayBuffer());
   if (bytes.byteLength < 2 || bytes[0] !== 0x1f || bytes[1] !== 0x8b) {
-    throw new Error(`${family.slug}: source is not a gzip tarball: ${url.href}`);
+    throw new Error(`${slug}: source is not a gzip tarball: ${url.href}`);
   }
-  const tmp = `${tarball}.download`;
-  await writeFile(tmp, bytes);
-  await rename(tmp, tarball);
+
+  // Stage the download + extraction outside `dest`, then rename() so an interrupted run never leaves
+  // a partial directory that the next run would treat as a valid cache hit.
+  const tarball = `${dest}.tar.gz.tmp`;
+  const staging = `${dest}.staging`;
+  await rm(staging, { recursive: true, force: true });
+  await mkdir(staging, { recursive: true });
+  await writeFile(tarball, bytes);
   // GitHub archive tarballs wrap everything in a top-level dir; strip it.
-  await exec("tar", ["xzf", tarball, "-C", dest, "--strip-components=1"]);
+  await exec("tar", ["xzf", tarball, "-C", staging, "--strip-components=1"]);
+  await rm(tarball, { force: true });
+  await rename(staging, dest);
   return dest;
 }

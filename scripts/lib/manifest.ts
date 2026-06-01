@@ -33,10 +33,11 @@ export const FamilySchema = z.object({
     repo: z.string(),
     version: z.string(),
     homepage: z.string(),
-    sourceMode: z.enum(["local", "release"]).default("local"),
-    /** Local clone path (sourceMode `local`); a leading `~` is expanded. */
+    /** `auto` (default) uses the local clone if present, else the release tarball. */
+    sourceMode: z.enum(["auto", "local", "release"]).default("auto"),
+    /** Local clone path (sourceMode `local`/`auto`); a leading `~` is expanded. */
     localPath: z.string().optional(),
-    /** Release tarball URL (sourceMode `release`). */
+    /** Release tarball URL (sourceMode `release`/`auto`). */
     releaseUrl: z.string().optional(),
     /** License file path within the source root. */
     licensePath: z.string().default("OFL.txt"),

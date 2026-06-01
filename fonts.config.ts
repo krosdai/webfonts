@@ -18,7 +18,7 @@ const lxgwBrightUpstream = {
   repo: "lxgw/LxgwBright",
   version: "v5.528",
   homepage: "https://github.com/lxgw/LxgwBright",
-  sourceMode: "local",
+  sourceMode: "auto",
   localPath: "~/repos/gh.lxgw.lxgwbright",
   releaseUrl: "https://github.com/lxgw/LxgwBright/archive/refs/tags/v5.528.tar.gz",
   licensePath: "OFL.txt",

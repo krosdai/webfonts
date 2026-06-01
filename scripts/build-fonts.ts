@@ -45,33 +45,36 @@ async function main(): Promise<void> {
   const cli = parseCli(process.argv.slice(2));
   const manifest = parseManifest(config);
   const outRoot = join(repoRoot, manifest.outRoot);
+  const readmePath = join(repoRoot, "README.md");
+
+  // --catalog-only regenerates just the root README table from the manifest — no source, no splits,
+  // no per-family files. (Bump a package version etc. with a full `build:fonts`.)
+  if (cli.catalogOnly) {
+    await updateReadmeCatalog({ readmePath, manifest });
+    console.log("✓ README catalog updated");
+    return;
+  }
 
   const families = manifest.families.filter(
     (f) => !cli.families || cli.families.includes(f.slug),
   );
   if (!families.length) throw new Error(`No families matched ${JSON.stringify(cli.families)}`);
 
-  if (!cli.catalogOnly) {
-    // Resolve the native core once and point the package at it before the first split.
-    process.env.CN_FONT_SPLIT_BIN = await ensureCoreBinary(manifest.generator.core);
-  }
+  // Resolve the native core once and point the package at it before the first split.
+  process.env.CN_FONT_SPLIT_BIN = await ensureCoreBinary(manifest.generator.core);
 
   for (const family of families) {
     const familyDir = join(outRoot, family.slug);
     const sourceRoot = await resolveSourceRoot(family, cli.sourceRoot);
 
-    if (!cli.catalogOnly) {
-      for (const instance of family.instances) {
-        const dir = dirName(instance);
-        const outDir = join(familyDir, dir);
-        if (cli.clean) await rm(outDir, { recursive: true, force: true });
-        await mkdir(outDir, { recursive: true });
-        const started = Date.now();
-        await splitInstance({ family, instance, sourceRoot, outDir });
-        console.log(
-          `  ✓ ${family.slug}/${dir} (${((Date.now() - started) / 1000).toFixed(1)}s)`,
-        );
-      }
+    for (const instance of family.instances) {
+      const dir = dirName(instance);
+      const outDir = join(familyDir, dir);
+      if (cli.clean) await rm(outDir, { recursive: true, force: true });
+      await mkdir(outDir, { recursive: true });
+      const started = Date.now();
+      await splitInstance({ family, instance, sourceRoot, outDir });
+      console.log(`  ✓ ${family.slug}/${dir} (${((Date.now() - started) / 1000).toFixed(1)}s)`);
     }
 
     await writeFamilyMeta({ family, familyDir, sourceRoot, manifest });
@@ -85,7 +88,7 @@ async function main(): Promise<void> {
     console.log(`✓ ${family.displayName} → ${manifest.outRoot}/${family.slug}/`);
   }
 
-  await updateReadmeCatalog({ readmePath: join(repoRoot, "README.md"), manifest });
+  await updateReadmeCatalog({ readmePath, manifest });
   console.log("✓ README catalog updated");
 }
 
