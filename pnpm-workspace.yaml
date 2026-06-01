@@ -7,4 +7,7 @@ packages:
 minimumReleaseAgeExclude:
   - cn-font-split@7.4.2
 onlyBuiltDependencies:
+  - cn-font-split
   - esbuild
+  - koffi
+  - protobufjs
