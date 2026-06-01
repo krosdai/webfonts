@@ -37,13 +37,16 @@ export const FamilySchema = z.object({
   upstream: z.object({
     repo: z.string(),
     version: z.string(),
-    homepage: z.string(),
+    homepage: z.string().refine((v) => URL.canParse(v), "homepage must be a valid URL"),
     /** `auto` (default) uses the local clone if present, else the release tarball. */
     sourceMode: z.enum(["auto", "local", "release"]).default("auto"),
     /** Local clone path (sourceMode `local`/`auto`); a leading `~` is expanded. */
     localPath: z.string().optional(),
     /** Release tarball URL (sourceMode `release`/`auto`). */
-    releaseUrl: z.string().optional(),
+    releaseUrl: z
+      .string()
+      .refine((v) => URL.canParse(v), "releaseUrl must be a valid URL")
+      .optional(),
     /** License file path within the source root. */
     licensePath: z.string().default("OFL.txt"),
     /**
