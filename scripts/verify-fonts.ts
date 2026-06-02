@@ -3,7 +3,14 @@ import { join } from "node:path";
 
 import config from "../fonts.config.ts";
 import { parseManifest } from "./lib/manifest.ts";
-import { dirName, packageName, packageVersion, repoRoot } from "./lib/util.ts";
+import {
+  dirName,
+  packageName,
+  packageVersion,
+  repoRoot,
+  stylesOf,
+  weightsOf,
+} from "./lib/util.ts";
 
 const LFS_POINTER = "version https://git-lfs";
 const WOFF2_MAGIC = 0x774f4632; // 'wOF2'
@@ -69,53 +76,59 @@ async function main(): Promise<void> {
         errors.push(`${family.slug}/package.json: files[] does not include woff2`);
     }
 
-    // index.css references must resolve relative to the family dir.
-    const indexPath = join(familyDir, "index.css");
-    if (await fileExists(indexPath)) {
-      for (const ref of chunkRefs(await readFile(indexPath, "utf8"))) {
-        if (!(await fileExists(join(familyDir, ref))))
-          errors.push(`${family.slug}/index.css: unresolved ./${ref}`);
+    // Every CSS entry point — atomic cuts + per-weight/per-style bundles + the full index — must exist
+    // and have all its url() chunk refs resolve relative to the family dir.
+    const cssFiles = [
+      ...family.instances.map((i) => `${dirName(i)}.css`),
+      ...weightsOf(family).map((w) => `weight-${String(w)}.css`),
+      ...stylesOf(family).map((s) => `style-${s}.css`),
+      "index.css",
+    ];
+
+    // Validate each referenced woff2 once (LFS pointer / wOF2 magic), no matter how many files cite it.
+    const checked = new Set<string>();
+
+    for (const file of cssFiles) {
+      const cssPath = join(familyDir, file);
+      if (!(await fileExists(cssPath))) {
+        errors.push(`missing ${family.slug}/${file}`);
+        continue;
+      }
+      const css = await readFile(cssPath, "utf8");
+      const refs = chunkRefs(css);
+      if (!refs.length) errors.push(`${family.slug}/${file}: references no woff2 chunks`);
+      for (const ref of refs) {
+        const chunkPath = join(familyDir, ref);
+        if (!(await fileExists(chunkPath))) {
+          errors.push(`${family.slug}/${file}: unresolved ./${ref}`);
+          continue;
+        }
+        if (checked.has(ref)) continue;
+        checked.add(ref);
+        const head = await readHead(chunkPath, 24);
+        if (head.toString("utf8").startsWith(LFS_POINTER)) {
+          errors.push(`${family.slug}/${ref}: is a git-lfs pointer (jsDelivr cannot serve it)`);
+        } else if (head.readUInt32BE(0) !== WOFF2_MAGIC) {
+          errors.push(`${family.slug}/${ref}: not a valid woff2 file`);
+        }
+        chunks++;
       }
     }
 
+    // Each atomic cut must carry exactly its weight/style @font-face descriptors.
     for (const instance of family.instances) {
-      const dir = dirName(instance);
-      const styleDir = join(familyDir, dir);
-      const cssPath = join(styleDir, "result.css");
-      if (!(await fileExists(cssPath))) {
-        errors.push(`missing ${family.slug}/${dir}/result.css`);
-        continue;
-      }
-
+      const file = `${dirName(instance)}.css`;
+      const cssPath = join(familyDir, file);
+      if (!(await fileExists(cssPath))) continue; // already reported as missing above
       const css = await readFile(cssPath, "utf8");
       if (!css.includes(`font-family:"${family.cssFamily}"`)) {
-        errors.push(`${family.slug}/${dir}: font-family "${family.cssFamily}" not found`);
+        errors.push(`${family.slug}/${file}: font-family "${family.cssFamily}" not found`);
       }
       if (!css.includes(`font-weight:${String(instance.weight)}`)) {
-        errors.push(`${family.slug}/${dir}: font-weight ${String(instance.weight)} not found`);
+        errors.push(`${family.slug}/${file}: font-weight ${String(instance.weight)} not found`);
       }
       if (!css.includes(`font-style:${instance.style}`)) {
-        errors.push(`${family.slug}/${dir}: font-style ${instance.style} not found`);
-      }
-
-      const refs = chunkRefs(css);
-      if (!refs.length)
-        errors.push(`${family.slug}/${dir}: result.css references no woff2 chunks`);
-      for (const ref of refs) {
-        const chunkPath = join(styleDir, ref);
-        if (!(await fileExists(chunkPath))) {
-          errors.push(`${family.slug}/${dir}: missing chunk ${ref}`);
-          continue;
-        }
-        const head = await readHead(chunkPath, 24);
-        if (head.toString("utf8").startsWith(LFS_POINTER)) {
-          errors.push(
-            `${family.slug}/${dir}/${ref}: is a git-lfs pointer (jsDelivr cannot serve it)`,
-          );
-        } else if (head.readUInt32BE(0) !== WOFF2_MAGIC) {
-          errors.push(`${family.slug}/${dir}/${ref}: not a valid woff2 file`);
-        }
-        chunks++;
+        errors.push(`${family.slug}/${file}: font-style ${instance.style} not found`);
       }
     }
   }
