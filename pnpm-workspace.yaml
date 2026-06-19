@@ -6,6 +6,10 @@ packages:
 # in through a range. (pnpm added this entry automatically; 7.4.2 was published the same day.)
 minimumReleaseAgeExclude:
   - cn-font-split@7.4.2
+overrides:
+  esbuild: ^0.28.1
+  protobufjs: ^7.6.3
+
 # pnpm v11 replaced onlyBuiltDependencies with allowBuilds (package -> bool). These deps ship native
 # binaries / fail-safe postinstalls; allow their build scripts so a fresh CI install doesn't error.
 allowBuilds:
