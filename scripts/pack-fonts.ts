@@ -30,7 +30,7 @@ async function main(): Promise<void> {
       console.error(res.stderr || res.stdout);
       throw new Error(`npm pack failed for ${family.slug} (exit ${String(res.status)})`);
     }
-    // npm pack flattens scoped names: @daihaus/lxgw-bright → daihaus-lxgw-bright-<version>.tgz
+    // npm pack flattens scoped names: @krosdai/lxgw-bright → krosdai-lxgw-bright-<version>.tgz
     const tarball = `${manifest.npm.scope.slice(1)}-${family.slug}-${packageVersion(family)}.tgz`;
     tarballs.push(tarball);
     console.log(`  ✓ ${packageName(manifest, family)} → artifacts/${tarball}`);

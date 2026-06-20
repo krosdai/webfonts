@@ -1,5 +1,5 @@
 {
-  "name": "@daihaus/lxgw-bright",
+  "name": "@krosdai/lxgw-bright",
   "version": "2.0.0",
   "description": "LXGW Bright — a semi-serif Chinese webfont (LXGW WenKai Lite + Ysabeau). Subset to unicode-range woff2.",
   "license": "OFL-1.1",
@@ -20,7 +20,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/daihaus/webfonts.git",
+    "url": "git+https://github.com/krosdai/webfonts.git",
     "directory": "packages/lxgw-bright"
   },
   "publishConfig": {

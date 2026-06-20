@@ -71,7 +71,7 @@ export async function writePackageReadme(opts: {
   const w = String(weights[1] ?? weights[0]); // sample weight
   const s = styles[0]; // sample style
   const cut = `${w}-${s}`; // sample atomic cut
-  // npm pack flattens scoped names: @daihaus/lxgw-bright → daihaus-lxgw-bright-<version>.tgz
+  // npm pack flattens scoped names: @krosdai/lxgw-bright → krosdai-lxgw-bright-<version>.tgz
   const tarball = `${manifest.npm.scope.slice(1)}-${family.slug}-${version}.tgz`;
 
   const readme = `# ${name}

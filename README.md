@@ -3,10 +3,10 @@
 Build pipeline for self-hosted **OFL CJK webfonts** that the popular CDNs (Google Fonts, Fontsource)
 don't carry yet. Each font is subset and chunked with
 [`cn-font-split`](https://github.com/KonghaYao/cn-font-split) into `unicode-range`-gated `.woff2`, then
-**published to npm under [`@daihaus`](https://www.npmjs.com/org/daihaus)** and served over jsDelivr:
+**published to npm under [`@krosdai`](https://www.npmjs.com/org/krosdai)** and served over jsDelivr:
 
 ```
-https://cdn.jsdelivr.net/npm/@daihaus/<font>@<version>/...
+https://cdn.jsdelivr.net/npm/@krosdai/<font>@<version>/...
 ```
 
 Browsers download only the glyph chunks a page actually uses.
@@ -17,11 +17,11 @@ Browsers download only the glyph chunks a page actually uses.
 
 | Package                                                                            | `font-family`    | Weights       | Styles         | License | Upstream                                                     | jsDelivr                                                                            |
 | ---------------------------------------------------------------------------------- | ---------------- | ------------- | -------------- | ------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| [`@daihaus/lxgw-bright`](https://www.npmjs.com/package/@daihaus/lxgw-bright)       | `LXGW Bright`    | 300, 400, 500 | normal, italic | OFL-1.1 | [lxgw/LxgwBright@v5.528](https://github.com/lxgw/LxgwBright) | [`index.css`](https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright@2.0.0/index.css)    |
-| [`@daihaus/lxgw-bright-gb`](https://www.npmjs.com/package/@daihaus/lxgw-bright-gb) | `LXGW Bright GB` | 300, 400, 500 | normal, italic | OFL-1.1 | [lxgw/LxgwBright@v5.528](https://github.com/lxgw/LxgwBright) | [`index.css`](https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright-gb@2.0.0/index.css) |
-| [`@daihaus/lxgw-bright-tc`](https://www.npmjs.com/package/@daihaus/lxgw-bright-tc) | `LXGW Bright TC` | 300, 400, 500 | normal, italic | OFL-1.1 | [lxgw/LxgwBright@v5.528](https://github.com/lxgw/LxgwBright) | [`index.css`](https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright-tc@2.0.0/index.css) |
+| [`@krosdai/lxgw-bright`](https://www.npmjs.com/package/@krosdai/lxgw-bright)       | `LXGW Bright`    | 300, 400, 500 | normal, italic | OFL-1.1 | [lxgw/LxgwBright@v5.528](https://github.com/lxgw/LxgwBright) | [`index.css`](https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright@2.0.0/index.css)    |
+| [`@krosdai/lxgw-bright-gb`](https://www.npmjs.com/package/@krosdai/lxgw-bright-gb) | `LXGW Bright GB` | 300, 400, 500 | normal, italic | OFL-1.1 | [lxgw/LxgwBright@v5.528](https://github.com/lxgw/LxgwBright) | [`index.css`](https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright-gb@2.0.0/index.css) |
+| [`@krosdai/lxgw-bright-tc`](https://www.npmjs.com/package/@krosdai/lxgw-bright-tc) | `LXGW Bright TC` | 300, 400, 500 | normal, italic | OFL-1.1 | [lxgw/LxgwBright@v5.528](https://github.com/lxgw/LxgwBright) | [`index.css`](https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright-tc@2.0.0/index.css) |
 
-_Served from npm via jsDelivr: `https://cdn.jsdelivr.net/npm/@daihaus/<name>@<version>/...` — subset with cn-font-split (wrapper 7.4.2, core 7.6.8). Pin an exact version._
+_Served from npm via jsDelivr: `https://cdn.jsdelivr.net/npm/@krosdai/<name>@<version>/...` — subset with cn-font-split (wrapper 7.4.2, core 7.6.8). Pin an exact version._
 
 <!-- FONTS:END -->
 
@@ -43,7 +43,7 @@ files (mixing entry points never double-downloads a glyph):
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright@2.0.0/index.css"
+  href="https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright@2.0.0/index.css"
 />
 <style>
   body {
@@ -57,14 +57,14 @@ Swap `index.css` for any narrower entry point, e.g. `.../weight-400.css` or `...
 **Via npm (bundlers):**
 
 ```sh
-npm install @daihaus/lxgw-bright
+npm install @krosdai/lxgw-bright
 ```
 
 ```js
-import "@daihaus/lxgw-bright"; // full bundle (index.css)
-import "@daihaus/lxgw-bright/weight-400.css"; // one weight, all styles
-import "@daihaus/lxgw-bright/style-italic.css"; // one style, all weights
-import "@daihaus/lxgw-bright/400-italic.css"; // exactly one cut
+import "@krosdai/lxgw-bright"; // full bundle (index.css)
+import "@krosdai/lxgw-bright/weight-400.css"; // one weight, all styles
+import "@krosdai/lxgw-bright/style-italic.css"; // one style, all weights
+import "@krosdai/lxgw-bright/400-italic.css"; // exactly one cut
 ```
 
 Pin an exact version. The CSS already contains the `@font-face` rules; you never hand-write them.
@@ -75,7 +75,7 @@ Build the packages, then pack them into gitignored `artifacts/*.tgz`:
 
 ```sh
 pnpm pack:fonts        # build:fonts --clean + verify:fonts + npm pack each package
-npm install ./artifacts/daihaus-lxgw-bright-2.0.0.tgz
+npm install ./artifacts/krosdai-lxgw-bright-2.0.0.tgz
 ```
 
 Or point a dependency straight at a built package folder (run `pnpm build:fonts` first so the
@@ -83,7 +83,7 @@ generated css/woff2 exist):
 
 ```jsonc
 // package.json
-{ "dependencies": { "@daihaus/lxgw-bright": "file:../webfonts/packages/lxgw-bright" } }
+{ "dependencies": { "@krosdai/lxgw-bright": "file:../webfonts/packages/lxgw-bright" } }
 ```
 
 ## Why npm instead of committing fonts to this repo
@@ -100,7 +100,7 @@ gitignored and ships only inside the published package (via each `package.json` 
 ## Layout
 
 ```
-packages/<font>/                 = one npm package, @daihaus/<font>
+packages/<font>/                 = one npm package, @krosdai/<font>
 ├── package.json                 name, version, exports, files allowlist (generated)
 ├── README.md                    per-package usage (generated)
 ├── OFL.txt                      license
@@ -136,7 +136,7 @@ Each package uses independent SemVer (starting `1.0.0`); the upstream font versi
 Merging a `version` bump to `main` triggers
 [`.github/workflows/publish.yml`](.github/workflows/publish.yml), which publishes any package whose
 `version` isn't on npm yet (`scripts/ci-publish.ts` queries the registry; unchanged packages are
-skipped). `@daihaus/*` is scoped, so all publishes use `--access public`.
+skipped). `@krosdai/*` is scoped, so all publishes use `--access public`.
 
 - **New package** (not yet on npm) → first publish with the **`NPM_TOKEN`** secret — OIDC can't
   bootstrap a package that doesn't exist yet.
@@ -144,11 +144,11 @@ skipped). `@daihaus/*` is scoped, so all publishes use `--access public`.
 
 One-time setup:
 
-1. Create a **granular** npm token — scope **`@daihaus`**, **Read and write** to packages, ≤90-day
+1. Create a **granular** npm token — scope **`@krosdai`**, **Read and write** to packages, ≤90-day
    expiry (the Dec 2025 cap; set a rotation reminder). Add it as the repo secret **`NPM_TOKEN`**
    (Settings → Secrets and variables → Actions). Required before the first publish.
 2. After a package's first (token) publish, add a **Trusted Publisher** in its npmjs.com settings →
-   repository `daihaus/webfonts`, workflow `publish.yml`. Subsequent bumps then publish via OIDC
+   repository `krosdai/webfonts`, workflow `publish.yml`. Subsequent bumps then publish via OIDC
    without the token.
 
 Manual alternative (local): `npm login`, then `pnpm release` — builds with `--clean`, verifies, and
