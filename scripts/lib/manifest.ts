@@ -63,7 +63,7 @@ export const ManifestSchema = z.object({
   /** Workspace directory holding the publishable packages. */
   outRoot: z.string().default("packages"),
   npm: z.object({
-    /** npm org scope, e.g. `@daihaus`. Package name is `<scope>/<slug>`. */
+    /** npm org scope, e.g. `@krosdai`. Package name is `<scope>/<slug>`. */
     scope: z.string().regex(/^@[a-z0-9][a-z0-9-]*$/, "scope must look like @org"),
     /** Repository URL written into each package.json. */
     repository: z.string(),

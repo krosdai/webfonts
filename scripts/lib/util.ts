@@ -19,7 +19,7 @@ export function stylesOf(family: Family): string[] {
   return [...new Set(family.instances.map((i) => i.style))];
 }
 
-/** Full npm package name, e.g. `@daihaus/lxgw-bright`. */
+/** Full npm package name, e.g. `@krosdai/lxgw-bright`. */
 export function packageName(manifest: Manifest, family: Family): string {
   return `${manifest.npm.scope}/${family.slug}`;
 }

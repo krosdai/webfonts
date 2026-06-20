@@ -68,8 +68,8 @@ const lxgwBrightUpstream = {
 const config = {
   outRoot: "packages",
   npm: {
-    scope: "@daihaus",
-    repository: "git+https://github.com/daihaus/webfonts.git",
+    scope: "@krosdai",
+    repository: "git+https://github.com/krosdai/webfonts.git",
   },
   generator: {
     tool: "cn-font-split",

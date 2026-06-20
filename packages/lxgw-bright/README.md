@@ -1,4 +1,4 @@
-# @daihaus/lxgw-bright
+# @krosdai/lxgw-bright
 
 LXGW Bright — a semi-serif Chinese webfont (LXGW WenKai Lite + Ysabeau). Subset to unicode-range woff2.
 
@@ -22,7 +22,7 @@ never double-downloads a glyph.
 ## Use via jsDelivr (no install)
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright@2.0.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright@2.0.0/index.css" />
 <style>
   body {
     font-family: "LXGW Bright", serif;
@@ -33,21 +33,21 @@ never double-downloads a glyph.
 Narrower is smaller:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright@2.0.0/weight-400.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright@2.0.0/400-normal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright@2.0.0/weight-400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright@2.0.0/400-normal.css" />
 ```
 
 ## Use via npm (bundlers)
 
 ```sh
-npm install @daihaus/lxgw-bright
+npm install @krosdai/lxgw-bright
 ```
 
 ```js
-import "@daihaus/lxgw-bright";                // full bundle (index.css)
-import "@daihaus/lxgw-bright/weight-400.css"; // one weight, all styles
-import "@daihaus/lxgw-bright/style-normal.css";   // one style, all weights
-import "@daihaus/lxgw-bright/400-normal.css";      // exactly one cut
+import "@krosdai/lxgw-bright";                // full bundle (index.css)
+import "@krosdai/lxgw-bright/weight-400.css"; // one weight, all styles
+import "@krosdai/lxgw-bright/style-normal.css";   // one style, all weights
+import "@krosdai/lxgw-bright/400-normal.css";      // exactly one cut
 ```
 
 Pin an exact version; the CSS already contains the `@font-face` rules.
@@ -57,12 +57,12 @@ Pin an exact version; the CSS already contains the `@font-face` rules.
 Build the tarball (`npm pack` in this folder, or `pnpm pack:fonts` from the monorepo root), then:
 
 ```sh
-npm install ./daihaus-lxgw-bright-2.0.0.tgz
+npm install ./krosdai-lxgw-bright-2.0.0.tgz
 ```
 
 Or point a dependency straight at the built package folder:
 
 ```jsonc
 // package.json
-{ "dependencies": { "@daihaus/lxgw-bright": "file:../path/to/packages/lxgw-bright" } }
+{ "dependencies": { "@krosdai/lxgw-bright": "file:../path/to/packages/lxgw-bright" } }
 ```

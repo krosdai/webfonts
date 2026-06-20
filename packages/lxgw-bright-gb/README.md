@@ -1,4 +1,4 @@
-# @daihaus/lxgw-bright-gb
+# @krosdai/lxgw-bright-gb
 
 LXGW Bright GB — the Mainland China (GB) glyph cut of LXGW Bright. Subset to unicode-range woff2.
 
@@ -22,7 +22,7 @@ never double-downloads a glyph.
 ## Use via jsDelivr (no install)
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright-gb@2.0.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright-gb@2.0.0/index.css" />
 <style>
   body {
     font-family: "LXGW Bright GB", serif;
@@ -33,21 +33,21 @@ never double-downloads a glyph.
 Narrower is smaller:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright-gb@2.0.0/weight-400.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@daihaus/lxgw-bright-gb@2.0.0/400-normal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright-gb@2.0.0/weight-400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@krosdai/lxgw-bright-gb@2.0.0/400-normal.css" />
 ```
 
 ## Use via npm (bundlers)
 
 ```sh
-npm install @daihaus/lxgw-bright-gb
+npm install @krosdai/lxgw-bright-gb
 ```
 
 ```js
-import "@daihaus/lxgw-bright-gb";                // full bundle (index.css)
-import "@daihaus/lxgw-bright-gb/weight-400.css"; // one weight, all styles
-import "@daihaus/lxgw-bright-gb/style-normal.css";   // one style, all weights
-import "@daihaus/lxgw-bright-gb/400-normal.css";      // exactly one cut
+import "@krosdai/lxgw-bright-gb";                // full bundle (index.css)
+import "@krosdai/lxgw-bright-gb/weight-400.css"; // one weight, all styles
+import "@krosdai/lxgw-bright-gb/style-normal.css";   // one style, all weights
+import "@krosdai/lxgw-bright-gb/400-normal.css";      // exactly one cut
 ```
 
 Pin an exact version; the CSS already contains the `@font-face` rules.
@@ -57,12 +57,12 @@ Pin an exact version; the CSS already contains the `@font-face` rules.
 Build the tarball (`npm pack` in this folder, or `pnpm pack:fonts` from the monorepo root), then:
 
 ```sh
-npm install ./daihaus-lxgw-bright-gb-2.0.0.tgz
+npm install ./krosdai-lxgw-bright-gb-2.0.0.tgz
 ```
 
 Or point a dependency straight at the built package folder:
 
 ```jsonc
 // package.json
-{ "dependencies": { "@daihaus/lxgw-bright-gb": "file:../path/to/packages/lxgw-bright-gb" } }
+{ "dependencies": { "@krosdai/lxgw-bright-gb": "file:../path/to/packages/lxgw-bright-gb" } }
 ```

@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 /**
  * Verify a consumed source file's bytes against the pinned `upstream.sourceChecksums`. Mirrors the
  * core-binary rule: if any checksums are configured, every consumed file must be covered (no silent
- * gaps), and a mismatch fails closed. This anchors the republished `@daihaus/<font>` output to the
+ * gaps), and a mismatch fails closed. This anchors the republished `@krosdai/<font>` output to the
  * exact reviewed source bytes — the local clone and the (non-byte-stable) release tarball both pass
  * only if the file content matches.
  */

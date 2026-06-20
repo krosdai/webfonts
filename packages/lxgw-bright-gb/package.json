@@ -1,5 +1,5 @@
 {
-  "name": "@daihaus/lxgw-bright-gb",
+  "name": "@krosdai/lxgw-bright-gb",
   "version": "2.0.0",
   "description": "LXGW Bright GB — the Mainland China (GB) glyph cut of LXGW Bright. Subset to unicode-range woff2.",
   "license": "OFL-1.1",
@@ -21,7 +21,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/daihaus/webfonts.git",
+    "url": "git+https://github.com/krosdai/webfonts.git",
     "directory": "packages/lxgw-bright-gb"
   },
   "publishConfig": {
