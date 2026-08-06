@@ -21,14 +21,14 @@
     "@types/node": "^25.9.2",
     "autocorrect-node": "^2.14.0",
     "cn-font-split": "7.4.3",
-    "eslint": "^10.4.1",
-    "globals": "^17.6.0",
+    "eslint": "^10.8.0",
+    "globals": "^17.9.0",
     "husky": "^9.1.7",
-    "lint-staged": "^17.0.7",
-    "prettier": "^3.8.3",
-    "tar": "^7.5.16",
-    "tsx": "^4.22.4",
-    "typescript-eslint": "^8.60.1",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6",
+    "tar": "^7.5.22",
+    "tsx": "^4.23.8",
+    "typescript-eslint": "^8.66.0",
     "zod": "^4.4.3"
   }
 }
