@@ -43,8 +43,8 @@ importers:
         specifier: ^7.5.22
         version: 7.5.22
       tsx:
-        specifier: ^4.23.8
-        version: 4.23.8
+        specifier: ^4.23.11
+        version: 4.23.11
       typescript-eslint:
         specifier: ^8.66.0
         version: 8.66.0(eslint@10.8.0)(typescript@5.9.3)
@@ -765,8 +765,8 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
-  tsx@4.23.8:
-    resolution: {integrity: sha512-8W675THjbzfFmLOQzjDBIBna+WjqMGIxmSZ1mMc1+o9qoVsEuAgQu5j5ueLhau8inOkDu9OslVg0FmfBs1RIHw==}
+  tsx@4.23.11:
+    resolution: {integrity: sha512-Ry2oTEUnhBdeEdWIztY8kf3/nBGnPnjMLVGL0YfdRXMORuPER5NlKmayqxtxRxwB1xBN+RivRaJfe7PM1rtiyw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -1459,7 +1459,7 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  tsx@4.23.8:
+  tsx@4.23.11:
     dependencies:
       esbuild: 0.28.1
     optionalDependencies:
